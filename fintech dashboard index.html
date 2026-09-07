@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vault — Personal Finance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<style>
+  :root{
+    --bg:#0F1216;
+    --bg-card:#181C22;
+    --bg-elev:#151A20;
+    --bg-input:#12151A;
+    --bg-hover:#1B2229;
+    --border:#262C34;
+    --border-soft:#21262D;
+    --border-faint:#1D2229;
+    --text:#ECEEF1;
+    --text-dim:#8B929B;
+    --text-faint:#6B7280;
+    --text-faintest:#565D66;
+    --green:#33D6A6;
+    --blue:#4E8CFF;
+    --red:#F1666B;
+    --amber:#F0B94D;
+    --purple:#C792EA;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+  }
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  input::placeholder{color:var(--text-faintest);}
+  button{font-family:inherit;cursor:pointer;}
+  .heading{font-family:'Space Grotesk',sans-serif;}
+  .tabular{font-variant-numeric:tabular-nums;}
+
+  /* layout */
+  #app{display:flex;min-height:100vh;}
+  .sidebar{
+    width:232px;flex-shrink:0;border-right:1px solid #1B2028;
+    padding:24px 16px;display:flex;flex-direction:column;
+  }
+  .brand{display:flex;align-items:center;gap:10px;padding:0 8px;margin-bottom:32px;}
+  .brand-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--green),var(--blue));}
+  .brand-name{font-size:18px;font-weight:700;letter-spacing:0.3px;}
+  nav.primary-nav{display:grid;gap:2px;}
+  .nav-btn{
+    display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;
+    background:transparent;border:none;color:var(--text-dim);font-size:13.5px;text-align:left;
+    transition:background 150ms ease,color 150ms ease;
+  }
+  .nav-btn svg{width:17px;height:17px;flex-shrink:0;}
+  .nav-btn.active{background:var(--bg-hover);color:var(--text);}
+  .nav-btn.active svg{color:var(--green);stroke:var(--green);}
+  .nav-btn:hover:not(.active){color:var(--text);}
+  .upsell{
+    margin-top:auto;padding:14px;border-radius:12px;background:var(--bg-elev);border:1px solid var(--border-soft);
+  }
+  .upsell-title{font-size:12.5px;color:var(--text);margin-bottom:4px;}
+  .upsell-body{font-size:11.5px;color:var(--text-faint);margin-bottom:10px;line-height:1.4;}
+  .upsell-btn{width:100%;background:var(--green);border:none;border-radius:8px;padding:8px 0;font-size:12.5px;font-weight:600;color:#0C120F;}
+
+  main.main{flex:1;padding:24px 32px;position:relative;max-width:1180px;}
+  header.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;}
+  .page-title{font-size:20px;font-weight:600;}
+  .page-sub{font-size:13px;color:var(--text-dim);margin-top:2px;}
+  .topbar-actions{display:flex;align-items:center;gap:14px;position:relative;}
+  .search-box{display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:8px 12px;}
+  .search-box svg{width:15px;height:15px;color:var(--text-faintest);}
+  .search-box input{background:none;border:none;outline:none;color:var(--text);font-size:13px;width:140px;}
+  .icon-btn{
+    position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;
+    width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  }
+  .icon-btn svg{width:16px;height:16px;}
+  .badge{
+    position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--red);
+    font-size:9px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;
+  }
+  .avatar-btn{
+    width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--blue));
+    border:none;font-size:12px;font-weight:700;color:#0C120F;
+  }
+
+  /* card primitives */
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:20px;}
+  .card-dashed{border:1px dashed var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:180px;}
+  .section-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .section-title{font-size:15px;font-weight:600;color:var(--text);margin:0;}
+  .link-btn{font-size:13px;color:var(--text-dim);background:none;border:none;display:flex;align-items:center;gap:2px;padding:0;}
+  .link-btn svg{width:14px;height:14px;}
+  .link-btn.accent{color:var(--green);}
+
+  .progress-track{height:6px;border-radius:999px;background:#242A31;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:999px;transition:width 500ms ease;}
+
+  .grid{display:grid;gap:20px;}
+  .grid-2{grid-template-columns:1.4fr 1fr;}
+  .grid-2-even{grid-template-columns:1fr 1fr;}
+  .grid-3{grid-template-columns:1fr 1fr 1.2fr;}
+  .grid-autofit{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
+  .grid-autofit-cards{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
+
+  /* hero balance card */
+  .hero-card{background:linear-gradient(135deg,#151A20 0%,#1B2229 100%);position:relative;overflow:hidden;}
+  .hero-glow{position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;
+    background:radial-gradient(circle, rgba(51,214,166,0.10), transparent 70%);}
+  .hero-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;flex-wrap:wrap;gap:16px;}
+  .hero-label{font-size:13px;color:var(--text-dim);margin-bottom:8px;}
+  .hero-balance-row{display:flex;align-items:center;gap:10px;}
+  .hero-balance{font-size:38px;font-weight:600;color:#F5F6F7;}
+  .eye-btn{background:none;border:none;color:var(--text-dim);}
+  .eye-btn svg{width:18px;height:18px;}
+  .hero-trend{display:flex;align-items:center;gap:6px;margin-top:10px;color:var(--green);font-size:13px;}
+  .hero-trend svg{width:14px;height:14px;}
+  .hero-actions{display:flex;gap:10px;}
+  .btn-primary{background:var(--green);color:#0C120F;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;}
+  .btn-primary svg{width:15px;height:15px;}
+  .btn-secondary{background:#20262E;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;}
+
+  /* chart legend */
+  .legend-row{display:flex;gap:18px;margin-top:4px;flex-wrap:wrap;}
+  .legend-item{font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:6px;}
+  .legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  /* mini card (payment card) */
+  .mini-card{
+    border-radius:14px;padding:18px;height:130px;border:1px solid var(--border);
+    display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;
+  }
+  .mini-card.dark{background:linear-gradient(135deg,#1E242C 0%,#0F1216 100%);}
+  .mini-card.green{background:linear-gradient(135deg,#1E3B32 0%,#0F1E19 100%);}
+  .mini-card-top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .mini-card-name{font-size:13px;color:var(--text);font-weight:500;}
+  .mini-card-top svg{width:16px;height:16px;color:var(--text-dim);transform:rotate(90deg);}
+  .mini-card-num{font-size:11px;color:var(--text-faint);letter-spacing:1.5px;margin-bottom:4px;}
+  .mini-card-balance{font-size:18px;color:#F5F6F7;}
+
+  /* transaction row */
+  .tx-row{display:flex;align-items:center;justify-content:space-between;}
+  .tx-left{display:flex;align-items:center;gap:12px;}
+  .tx-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .tx-icon svg{width:16px;height:16px;}
+  .tx-name{font-size:13.5px;color:var(--text);}
+  .tx-meta{font-size:12px;color:var(--text-faint);}
+  .tx-amount{font-size:13.5px;font-weight:500;}
+
+  .filter-row{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  .filter-chip{font-size:12.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-dim);}
+  .filter-chip.active{border-color:var(--green);background:rgba(51,214,166,0.1);color:var(--green);}
+
+  .budget-row{display:grid;gap:8px;}
+  .budget-head{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+  .budget-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .budget-icon svg{width:16px;height:16px;}
+
+  .goal-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+  .goal-btn{width:100%;margin-top:16px;background:#20262E;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 0;font-size:13px;}
+
+  .settings-row{
+    display:flex;align-items:center;justify-content:space-between;padding:14px 4px;background:none;border:none;
+    border-bottom:1px solid var(--border-faint);color:var(--text);font-size:14px;text-align:left;width:100%;
+  }
+  .settings-row .left{display:flex;align-items:center;gap:12px;}
+  .settings-row svg.chev{width:15px;height:15px;color:var(--text-faintest);}
+  .settings-row.danger{color:var(--red);border-bottom:none;}
+
+  .field-label{font-size:12.5px;color:var(--text-dim);display:block;margin-bottom:6px;}
+  .field-input{
+    width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;
+    padding:12px 14px;color:var(--text);font-size:14px;outline:none;
+  }
+  .amount-wrap{position:relative;}
+  .amount-dollar{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:20px;}
+  .amount-input{padding-left:30px;font-size:20px;}
+  .submit-btn{margin-top:6px;width:100%;border:none;border-radius:10px;padding:13px 0;font-size:14px;font-weight:600;}
+  .submit-btn.enabled{background:var(--green);color:#0C120F;}
+  .submit-btn.disabled{background:#233024;color:#556058;cursor:not-allowed;}
+  .recipient-btn{display:flex;align-items:center;gap:12px;padding:12px 4px;background:none;border:none;border-bottom:1px solid var(--border-faint);width:100%;text-align:left;}
+  .recipient-avatar{width:34px;height:34px;border-radius:50%;background:#20262E;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text);font-weight:600;}
+  .recipient-name{font-size:13.5px;color:var(--text);}
+
+  /* notifications panel */
+  .notif-panel{
+    position:absolute;top:56px;right:0;width:340px;background:var(--bg-card);border:1px solid var(--border);
+    border-radius:14px;box-shadow:0 20px 40px rgba(0,0,0,0.4);z-index:30;overflow:hidden;display:none;
+  }
+  .notif-panel.open{display:block;}
+  .notif-head{padding:14px 16px;border-bottom:1px solid var(--border-faint);display:flex;justify-content:space-between;align-items:center;}
+  .notif-head span{font-size:14px;font-weight:600;color:var(--text);}
+  .notif-close{background:none;border:none;color:var(--text-dim);}
+  .notif-close svg{width:16px;height:16px;}
+  .notif-list{max-height:340px;overflow-y:auto;}
+  .notif-item{padding:12px 16px;border-bottom:1px solid var(--border-faint);display:flex;gap:10px;}
+  .notif-dot{width:7px;height:7px;border-radius:50%;margin-top:6px;flex-shrink:0;}
+  .notif-title{font-size:13px;color:var(--text);}
+  .notif-body{font-size:12.5px;color:var(--text-dim);margin-top:2px;line-height:1.4;}
+  .notif-time{font-size:11px;color:var(--text-faintest);margin-top:4px;}
+
+  /* profile */
+  .profile-header{display:flex;align-items:center;gap:16px;}
+  .profile-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:#0C120F;}
+  .profile-name{font-size:17px;color:var(--text);font-weight:600;}
+  .profile-email{font-size:13px;color:var(--text-dim);}
+
+  /* toast */
+  .toast{
+    position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--bg-hover);
+    border:1px solid var(--green);border-radius:10px;padding:12px 18px;display:none;align-items:center;gap:10px;
+    font-size:13px;color:var(--text);z-index:50;
+  }
+  .toast.show{display:flex;}
+  .toast svg{width:15px;height:15px;color:var(--green);}
+
+  /* bottom nav */
+  .bottom-nav{
+    display:none;position:fixed;bottom:0;left:0;right:0;background:#12151A;border-top:1px solid #1B2028;
+    padding:10px 8px;justify-content:space-around;z-index:40;
+  }
+  .bottom-nav button{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text-faintest);}
+  .bottom-nav button svg{width:19px;height:19px;}
+  .bottom-nav button.active{color:var(--green);}
+  .bottom-nav span{font-size:10px;}
+
+  @media (max-width:860px){
+    .sidebar{display:none;}
+    .grid-2,.grid-2-even,.grid-3{grid-template-columns:1fr;}
+    main.main{padding:16px;padding-bottom:84px;}
+    .bottom-nav{display:flex;}
+    .search-box{display:none;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ------------------------------- data ------------------------------- */
+
+const fmt = (n) => (n).toLocaleString("en-US",{style:"currency",currency:"USD",maximumFractionDigits:2});
+
+const trend = [
+  {m:"Apr", in:6200, out:4100},
+  {m:"May", in:6400, out:4650},
+  {m:"Jun", in:5950, out:4300},
+  {m:"Jul", in:7100, out:5200},
+  {m:"Aug", in:6800, out:4900},
+  {m:"Sep", in:7420, out:5180},
+];
+
+const categories = [
+  {name:"Housing", value:1850, color:"#4E8CFF"},
+  {name:"Food", value:640, color:"#33D6A6"},
+  {name:"Transport", value:310, color:"#F0B94D"},
+  {name:"Shopping", value:480, color:"#C792EA"},
+  {name:"Other", value:220, color:"#8B929B"},
+];
+
+const budgets = [
+  {name:"Housing", spent:1850, limit:2000, icon:"home", color:"#4E8CFF"},
+  {name:"Food & Dining", spent:640, limit:700, icon:"coffee", color:"#33D6A6"},
+  {name:"Transport", spent:310, limit:400, icon:"car", color:"#F0B94D"},
+  {name:"Shopping", spent:480, limit:350, icon:"shopping-bag", color:"#C792EA"},
+  {name:"Entertainment", spent:128, limit:250, icon:"film", color:"#F1666B"},
+];
+
+const goals = [
+  {name:"Emergency Fund", current:8400, target:12000, eta:"Mar 2027"},
+  {name:"Trip to Kyoto", current:2150, target:4500, eta:"Jan 2027"},
+  {name:"New MacBook", current:1780, target:2200, eta:"Nov 2026"},
+];
+
+const cardsData = [
+  {name:"Vault Black", type:"Debit", number:"4291", balance:24582.19, theme:"dark"},
+  {name:"Vault Signature", type:"Credit", number:"7734", balance:-1240.55, limit:15000, theme:"green"},
+];
+
+const transactions = [
+  {id:1, name:"Whole Foods Market", cat:"Food", amount:-84.21, date:"Today, 9:12 AM", icon:"coffee", color:"#33D6A6"},
+  {id:2, name:"Payroll — Acme Inc.", cat:"Income", amount:3120.00, date:"Today, 6:00 AM", icon:"arrow-down-left", color:"#33D6A6"},
+  {id:3, name:"Uber Trip", cat:"Transport", amount:-18.40, date:"Yesterday, 8:47 PM", icon:"car", color:"#F0B94D"},
+  {id:4, name:"Netflix", cat:"Entertainment", amount:-15.49, date:"Yesterday, 12:01 AM", icon:"film", color:"#F1666B"},
+  {id:5, name:"Rent — Meridian Lofts", cat:"Housing", amount:-1850.00, date:"Sep 1, 8:00 AM", icon:"home", color:"#4E8CFF"},
+  {id:6, name:"Zara", cat:"Shopping", amount:-132.00, date:"Aug 30, 4:22 PM", icon:"shopping-bag", color:"#C792EA"},
+  {id:7, name:"Electric Co.", cat:"Utilities", amount:-94.60, date:"Aug 29, 7:15 AM", icon:"zap", color:"#8B929B"},
+];
+
+const notifications = [
+  {id:1, title:"Payroll deposited", body:"$3,120.00 from Acme Inc. just landed.", time:"6:00 AM", unread:true},
+  {id:2, title:"Budget alert", body:"Shopping is at 137% of its monthly limit.", time:"Yesterday", unread:true},
+  {id:3, title:"Goal milestone", body:"Emergency Fund just crossed 70% funded.", time:"2 days ago", unread:false},
+  {id:4, title:"New sign-in", body:"Your account was accessed from a new device.", time:"3 days ago", unread:false},
+];
+
+const navItems = [
+  {id:"dashboard", label:"Dashboard", icon:"layout-grid"},
+  {id:"transactions", label:"Transactions", icon:"arrow-left-right"},
+  {id:"analytics", label:"Analytics", icon:"pie-chart"},
+  {id:"budgets", label:"Budgets", icon:"target"},
+  {id:"goals", label:"Goals", icon:"target"},
+  {id:"cards", label:"Cards", icon:"credit-card"},
+  {id:"transfer", label:"Transfer", icon:"arrow-up-right"},
+  {id:"profile", label:"Profile", icon:"user"},
+];
+
+const mobileNavIds = ["dashboard","transactions","transfer","analytics","profile"];
+
+const titles = {
+  dashboard:"Dashboard", transactions:"Transactions", analytics:"Analytics",
+  budgets:"Budgets", goals:"Savings goals", cards:"Cards", transfer:"Transfer", profile:"Profile",
+};
+
+/* ------------------------------- state ------------------------------- */
+
+const state = {
+  view:"dashboard",
+  hideBalance:false,
+  notifOpen:false,
+};
+
+/* ------------------------------- svg chart helpers ------------------------------- */
+
+function areaChartSVG(data){
+  const w=600,h=220,padL=10,padR=10,padT=10,padB=30;
+  const plotW=w-padL-padR, plotH=h-padT-padB;
+  const max = Math.max(...data.map(d=>Math.max(d.in,d.out))) * 1.15;
+  const n=data.length;
+  const x=(i)=> padL + i*(plotW/(n-1));
+  const y=(v)=> padT + (1-v/max)*plotH;
+  const baseline = padT+plotH;
+
+  const linePath=(key)=> data.map((d,i)=> (i===0?"M":"L")+x(i)+","+y(d[key])).join(" ");
+  const areaPath=(key)=> linePath(key)+" L"+x(n-1)+","+baseline+" L"+x(0)+","+baseline+" Z";
+
+  const labels = data.map((d,i)=>`<text x="${x(i)}" y="${h-8}" text-anchor="middle" font-size="12" fill="#6B7280" font-family="Inter">${d.m}</text>`).join("");
+
+  return `
+  <svg viewBox="0 0 ${w} ${h}" width="100%" height="200" preserveAspectRatio="none" style="overflow:visible">
+    <defs>
+      <linearGradient id="inGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#33D6A6" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="#33D6A6" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="outGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4E8CFF" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="#4E8CFF" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${areaPath('in')}" fill="url(#inGrad)" stroke="none"/>
+    <path d="${areaPath('out')}" fill="url(#outGrad)" stroke="none"/>
+    <path d="${linePath('in')}" fill="none" stroke="#33D6A6" stroke-width="2"/>
+    <path d="${linePath('out')}" fill="none" stroke="#4E8CFF" stroke-width="2"/>
+    ${labels}
+  </svg>`;
+}
+
+function barChartSVG(data){
+  const w=600,h=240,padL=40,padR=10,padT=10,padB=30;
+  const plotW=w-padL-padR, plotH=h-padT-padB;
+  const max = Math.max(...data.map(d=>Math.max(d.in,d.out))) * 1.15;
+  const n=data.length;
+  const groupW = plotW/n;
+  const barW = groupW*0.32;
+  const gap = groupW*0.06;
+  const y=(v)=> padT + (1-v/max)*plotH;
+  const baseline = padT+plotH;
+
+  let gridLines="";
+  for(let i=0;i<=4;i++){
+    const gy = padT + (plotH/4)*i;
+    const val = Math.round(max - (max/4)*i);
+    gridLines += `<line x1="${padL}" y1="${gy}" x2="${w-padR}" y2="${gy}" stroke="#232930" stroke-width="1"/>
+      <text x="${padL-8}" y="${gy+4}" text-anchor="end" font-size="11" fill="#6B7280" font-family="Inter">${val>=1000?(val/1000)+'k':val}</text>`;
+  }
+
+  let bars="";
+  data.forEach((d,i)=>{
+    const gx = padL + i*groupW + groupW/2;
+    const xin = gx - barW - gap/2;
+    const xout = gx + gap/2;
+    bars += `<rect x="${xin}" y="${y(d.in)}" width="${barW}" height="${baseline-y(d.in)}" fill="#33D6A6" rx="4"/>`;
+    bars += `<rect x="${xout}" y="${y(d.out)}" width="${barW}" height="${baseline-y(d.out)}" fill="#4E8CFF" rx="4"/>`;
+    bars += `<text x="${gx}" y="${h-8}" text-anchor="middle" font-size="12" fill="#6B7280" font-family="Inter">${d.m}</text>`;
+  });
+
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="220" preserveAspectRatio="none">${gridLines}${bars}</svg>`;
+}
+
+function donutSVG(cats){
+  const size=200, cx=100, cy=100, r=70, sw=24;
+  const circumference = 2*Math.PI*r;
+  const total = cats.reduce((a,c)=>a+c.value,0);
+  let offsetAcc=0;
+  let circles="";
+  cats.forEach(c=>{
+    const frac = c.value/total;
+    const segLen = frac*circumference;
+    const dashArray = `${segLen} ${circumference-segLen}`;
+    const dashOffset = -offsetAcc;
+    circles += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.color}" stroke-width="${sw}"
+      stroke-dasharray="${dashArray}" stroke-dashoffset="${dashOffset}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    offsetAcc += segLen;
+  });
+  return `<svg viewBox="0 0 ${size} ${size}" width="100%" height="200">${circles}</svg>`;
+}
+
+/* ------------------------------- small ui builders ------------------------------- */
+
+const icon = (name, extra="") => `<i data-lucide="${name}" ${extra}></i>`;
+
+function progressBar(pct, color){
+  return `<div class="progress-track"><div class="progress-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div>`;
+}
+
+function txRow(t, compact){
+  const positive = t.amount>0;
+  return `
+  <div class="tx-row">
+    <div class="tx-left">
+      <div class="tx-icon" style="background:${t.color}1E">${icon(t.icon, `style="width:16px;height:16px;color:${t.color}"`)}</div>
+      <div>
+        <div class="tx-name">${t.name}</div>
+        ${compact?"":`<div class="tx-meta">${t.cat} · ${t.date}</div>`}
+      </div>
+    </div>
+    <span class="tx-amount tabular" style="color:${positive?'var(--green)':'var(--text)'}">${positive?'+':'-'}${fmt(Math.abs(t.amount))}</span>
+  </div>`;
+}
+
+function miniCard(c){
+  const isDark = c.theme==="dark";
+  return `
+  <div class="mini-card ${isDark?'dark':'green'}">
+    <div class="mini-card-top">
+      <span class="mini-card-name">${c.name}</span>
+      ${icon("wifi")}
+    </div>
+    <div>
+      <div class="mini-card-num">•••• ${c.number}</div>
+      <div class="mini-card-balance heading tabular">${fmt(Math.abs(c.balance))}</div>
+    </div>
+  </div>`;
+}
+
+/* ------------------------------- views ------------------------------- */
+
+function viewDashboard(){
+  const totalBalance = cardsData.filter(c=>c.balance>0).reduce((a,c)=>a+c.balance,0);
+  const topBudget = budgets[3];
+  const pctTop = (topBudget.spent/topBudget.limit)*100;
+  const overTop = pctTop>100;
+
+  return `
+  <div class="grid">
+    <div class="card hero-card">
+      <div class="hero-glow"></div>
+      <div class="hero-top">
+        <div>
+          <div class="hero-label">Total balance</div>
+          <div class="hero-balance-row">
+            <span class="hero-balance heading tabular" id="balance-figure">${state.hideBalance?"••••••":fmt(totalBalance)}</span>
+            <button class="eye-btn" id="toggle-balance">${icon(state.hideBalance?"eye":"eye-off")}</button>
+          </div>
+          <div class="hero-trend">${icon("trending-up")}<span>+4.2% this month</span></div>
+        </div>
+        <div class="hero-actions">
+          <button class="btn-primary" data-goto="transfer">${icon("arrow-up-right")} Send</button>
+          <button class="btn-secondary" data-goto="cards">Add funds</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="section-title-row">
+          <h3 class="section-title heading">Cash flow — last 6 months</h3>
+          <button class="link-btn" data-goto="analytics">Full analytics ${icon("chevron-right")}</button>
+        </div>
+        ${areaChartSVG(trend)}
+        <div class="legend-row">
+          <span class="legend-item"><span class="legend-dot" style="background:#33D6A6"></span>Income</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#4E8CFF"></span>Spending</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row">
+          <h3 class="section-title heading">Savings goals</h3>
+          <button class="link-btn" data-goto="goals">All goals ${icon("chevron-right")}</button>
+        </div>
+        <div class="grid" style="gap:16px">
+          ${goals.slice(0,2).map(g=>{
+            const pct=(g.current/g.target)*100;
+            return `<div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                <span style="color:var(--text)">${g.name}</span>
+                <span class="tabular" style="color:var(--text-dim)">${fmt(g.current)} / ${fmt(g.target)}</span>
+              </div>
+              ${progressBar(pct,"#33D6A6")}
+            </div>`;
+          }).join("")}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="section-title-row">
+          <h3 class="section-title heading">Cards</h3>
+          <button class="link-btn" data-goto="cards">All cards ${icon("chevron-right")}</button>
+        </div>
+        ${miniCard(cardsData[0])}
+      </div>
+
+      <div class="card">
+        <div class="section-title-row">
+          <h3 class="section-title heading">Top budget</h3>
+          <button class="link-btn" data-goto="budgets">All budgets ${icon("chevron-right")}</button>
+        </div>
+        <div class="budget-head">
+          <div class="budget-icon" style="background:${topBudget.color}22">${icon(topBudget.icon,`style="width:16px;height:16px;color:${topBudget.color}"`)}</div>
+          <div>
+            <div style="font-size:13px;color:var(--text)">${topBudget.name}</div>
+            <div style="font-size:12px;color:${overTop?'var(--red)':'var(--text-dim)'}">${fmt(topBudget.spent)} of ${fmt(topBudget.limit)}</div>
+          </div>
+        </div>
+        ${progressBar(pctTop, overTop?"#F1666B":topBudget.color)}
+        ${overTop?`<div style="font-size:12px;color:var(--red);margin-top:6px">${Math.round(pctTop-100)}% over limit</div>`:""}
+      </div>
+
+      <div class="card">
+        <div class="section-title-row">
+          <h3 class="section-title heading">Recent activity</h3>
+          <button class="link-btn" data-goto="transactions">See all ${icon("chevron-right")}</button>
+        </div>
+        <div class="grid" style="gap:12px">
+          ${transactions.slice(0,3).map(t=>txRow(t,true)).join("")}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+let txFilter = "All";
+function viewTransactions(){
+  const cats = ["All", ...new Set(transactions.map(t=>t.cat))];
+  const filtered = txFilter==="All" ? transactions : transactions.filter(t=>t.cat===txFilter);
+  return `
+  <div class="card">
+    <div class="section-title-row"><h3 class="section-title heading">Transactions</h3></div>
+    <div class="filter-row">
+      ${cats.map(c=>`<button class="filter-chip ${c===txFilter?'active':''}" data-filter="${c}">${c}</button>`).join("")}
+    </div>
+    <div class="grid" style="gap:18px">
+      ${filtered.map(t=>txRow(t,false)).join("")}
+    </div>
+  </div>`;
+}
+
+function viewAnalytics(){
+  const total = categories.reduce((a,c)=>a+c.value,0);
+  return `
+  <div class="grid">
+    <div class="card">
+      <div class="section-title-row"><h3 class="section-title heading">Income vs spending</h3></div>
+      ${barChartSVG(trend)}
+    </div>
+    <div class="grid grid-2-even">
+      <div class="card">
+        <div class="section-title-row"><h3 class="section-title heading">Spending by category</h3></div>
+        <div style="display:flex;justify-content:center">${donutSVG(categories)}</div>
+      </div>
+      <div class="card">
+        <div class="section-title-row"><h3 class="section-title heading">Breakdown</h3></div>
+        <div class="grid" style="gap:14px">
+          ${categories.map(c=>`
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                <span style="color:var(--text);display:flex;align-items:center;gap:8px">
+                  <span class="legend-dot" style="background:${c.color}"></span>${c.name}
+                </span>
+                <span class="tabular" style="color:var(--text-dim)">${fmt(c.value)} · ${Math.round((c.value/total)*100)}%</span>
+              </div>
+              ${progressBar((c.value/total)*100, c.color)}
+            </div>`).join("")}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function viewBudgets(){
+  return `
+  <div class="card">
+    <div class="section-title-row">
+      <h3 class="section-title heading">Monthly budgets</h3>
+      <button class="link-btn accent">${icon("plus")} New budget</button>
+    </div>
+    <div class="grid" style="gap:20px">
+      ${budgets.map(b=>{
+        const pct=(b.spent/b.limit)*100; const over=pct>100;
+        return `<div>
+          <div class="budget-head">
+            <div class="budget-icon" style="background:${b.color}22">${icon(b.icon,`style="width:16px;height:16px;color:${b.color}"`)}</div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between">
+                <span style="font-size:14px;color:var(--text)">${b.name}</span>
+                <span class="tabular" style="font-size:13px;color:${over?'var(--red)':'var(--text-dim)'}">${fmt(b.spent)} <span style="color:var(--text-faintest)">/ ${fmt(b.limit)}</span></span>
+              </div>
+            </div>
+          </div>
+          ${progressBar(pct, over?"#F1666B":b.color)}
+          ${over?`<div style="font-size:12px;color:var(--red);margin-top:6px">Over by ${fmt(b.spent-b.limit)}</div>`:""}
+        </div>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
+function viewGoals(){
+  return `
+  <div class="grid grid-autofit">
+    ${goals.map(g=>{
+      const pct=(g.current/g.target)*100;
+      return `<div class="card">
+        <div class="goal-card-top">
+          <div>
+            <div style="font-size:15px;color:var(--text);font-weight:500">${g.name}</div>
+            <div style="font-size:12px;color:var(--text-faint);margin-top:2px">Target: ${g.eta}</div>
+          </div>
+          <span style="font-size:13px;color:var(--green);font-weight:600">${Math.round(pct)}%</span>
+        </div>
+        ${progressBar(pct,"#33D6A6")}
+        <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:13px">
+          <span class="tabular" style="color:var(--text)">${fmt(g.current)}</span>
+          <span class="tabular" style="color:var(--text-faint)">of ${fmt(g.target)}</span>
+        </div>
+        <button class="goal-btn">Add funds</button>
+      </div>`;
+    }).join("")}
+    <div class="card card-dashed">
+      <div style="text-align:center;color:var(--text-dim)">
+        ${icon("plus", 'style="width:22px;height:22px;margin-bottom:8px"')}
+        <div style="font-size:13px">Create a new goal</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function viewCards(){
+  return `
+  <div class="grid">
+    <div class="grid grid-autofit-cards">
+      ${cardsData.map(c=>miniCard(c)).join("")}
+    </div>
+    <div class="card">
+      <div class="section-title-row"><h3 class="section-title heading">Card settings</h3></div>
+      <div class="grid" style="gap:0">
+        ${[["shield-check","Freeze card"],["settings","Set spending limit"],["credit-card","Request replacement"]]
+          .map(([ic,label])=>`
+          <button class="settings-row">
+            <span class="left">${icon(ic,'style="width:16px;height:16px;color:var(--text-dim)"')} ${label}</span>
+            ${icon("chevron-right",'class="chev"')}
+          </button>`).join("")}
+      </div>
+    </div>
+  </div>`;
+}
+
+function viewTransfer(){
+  return `
+  <div class="grid grid-2-even">
+    <div class="card">
+      <div class="section-title-row"><h3 class="section-title heading">Send money</h3></div>
+      <div class="grid" style="gap:16px">
+        <div>
+          <label class="field-label">Recipient</label>
+          <input id="tf-recipient" class="field-input" placeholder="Name, email or @handle" />
+        </div>
+        <div>
+          <label class="field-label">Amount</label>
+          <div class="amount-wrap">
+            <span class="amount-dollar heading">$</span>
+            <input id="tf-amount" class="field-input amount-input heading tabular" placeholder="0.00" />
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Note (optional)</label>
+          <input id="tf-note" class="field-input" placeholder="What's this for?" />
+        </div>
+        <button id="tf-submit" class="submit-btn disabled">Review transfer</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title-row"><h3 class="section-title heading">Recent recipients</h3></div>
+      <div class="grid" style="gap:0">
+        ${["Jordan Reyes","Priya Nair","Sam Okafor","Meridian Lofts"].map(name=>`
+          <button class="recipient-btn" data-recipient="${name}">
+            <div class="recipient-avatar">${name.split(" ").map(w=>w[0]).join("")}</div>
+            <span class="recipient-name">${name}</span>
+          </button>`).join("")}
+      </div>
+    </div>
+  </div>`;
+}
+
+function viewProfile(){
+  const rows = [["user","Personal information"],["shield-check","Security & 2FA"],["bell","Notification preferences"],["settings","App preferences"]];
+  return `
+  <div class="grid" style="max-width:520px">
+    <div class="card profile-header">
+      <div class="profile-avatar heading">AM</div>
+      <div>
+        <div class="profile-name">Alex Morgan</div>
+        <div class="profile-email">alex.morgan@email.com</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="grid" style="gap:0">
+        ${rows.map(([ic,label])=>`
+          <button class="settings-row">
+            <span class="left">${icon(ic,'style="width:16px;height:16px;color:var(--text-dim)"')} ${label}</span>
+            ${icon("chevron-right",'class="chev"')}
+          </button>`).join("")}
+        <button class="settings-row danger">${icon("log-out",'style="width:16px;height:16px"')} Sign out</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+const viewRenderers = {
+  dashboard:viewDashboard, transactions:viewTransactions, analytics:viewAnalytics,
+  budgets:viewBudgets, goals:viewGoals, cards:viewCards, transfer:viewTransfer, profile:viewProfile,
+};
+
+/* ------------------------------- shell / render ------------------------------- */
+
+function shellHTML(){
+  const unread = notifications.filter(n=>n.unread).length;
+  return `
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <span class="brand-name heading">Vault</span>
+    </div>
+    <nav class="primary-nav">
+      ${navItems.map(n=>`
+        <button class="nav-btn ${state.view===n.id?'active':''}" data-goto="${n.id}">
+          ${icon(n.icon)} ${n.label}
+        </button>`).join("")}
+    </nav>
+    <div class="upsell">
+      <div class="upsell-title">Upgrade to Vault Pro</div>
+      <div class="upsell-body">Deeper insights and higher transfer limits.</div>
+      <button class="upsell-btn">Learn more</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="page-title heading">${titles[state.view]}</div>
+        ${state.view==='dashboard'?`<div class="page-sub">Good afternoon, Alex</div>`:""}
+      </div>
+      <div class="topbar-actions">
+        <div class="search-box">${icon("search")}<input placeholder="Search"/></div>
+        <button class="icon-btn" id="notif-toggle">
+          ${icon("bell")}
+          ${unread>0?`<span class="badge">${unread}</span>`:""}
+        </button>
+        <div class="notif-panel ${state.notifOpen?'open':''}" id="notif-panel">
+          <div class="notif-head"><span>Notifications</span><button class="notif-close" id="notif-close">${icon("x")}</button></div>
+          <div class="notif-list">
+            ${notifications.map(n=>`
+              <div class="notif-item">
+                <div class="notif-dot" style="background:${n.unread?'var(--green)':'transparent'}"></div>
+                <div>
+                  <div class="notif-title">${n.title}</div>
+                  <div class="notif-body">${n.body}</div>
+                  <div class="notif-time">${n.time}</div>
+                </div>
+              </div>`).join("")}
+          </div>
+        </div>
+        <button class="avatar-btn heading" data-goto="profile">AM</button>
+      </div>
+    </header>
+
+    <div id="main-content">${viewRenderers[state.view]()}</div>
+
+    <div class="toast" id="toast"><span id="toast-check">${icon("check")}</span><span id="toast-text"></span></div>
+  </main>
+
+  <nav class="bottom-nav">
+    ${mobileNavIds.map(id=>{
+      const item = navItems.find(n=>n.id===id);
+      return `<button class="${state.view===id?'active':''}" data-goto="${id}">${icon(item.icon)}<span>${item.label}</span></button>`;
+    }).join("")}
+  </nav>`;
+}
+
+function render(){
+  document.getElementById("app").innerHTML = shellHTML();
+  if(window.lucide) lucide.createIcons();
+  attachEvents();
+}
+
+/* ------------------------------- events ------------------------------- */
+
+function attachEvents(){
+  document.querySelectorAll("[data-goto]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      state.view = el.getAttribute("data-goto");
+      state.notifOpen = false;
+      render();
+    });
+  });
+
+  const notifToggle = document.getElementById("notif-toggle");
+  if(notifToggle){
+    notifToggle.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      state.notifOpen = !state.notifOpen;
+      render();
+    });
+  }
+  const notifClose = document.getElementById("notif-close");
+  if(notifClose){
+    notifClose.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      state.notifOpen = false;
+      render();
+    });
+  }
+  document.addEventListener("click", closeNotifOnOutsideClick);
+
+  const toggleBalance = document.getElementById("toggle-balance");
+  if(toggleBalance){
+    toggleBalance.addEventListener("click", ()=>{
+      state.hideBalance = !state.hideBalance;
+      render();
+    });
+  }
+
+  if(state.view === "transactions"){
+    document.querySelectorAll("[data-filter]").forEach(el=>{
+      el.addEventListener("click", ()=>{
+        txFilter = el.getAttribute("data-filter");
+        document.getElementById("main-content").innerHTML = viewTransactions();
+        if(window.lucide) lucide.createIcons();
+        attachEvents();
+      });
+    });
+  }
+
+  if(state.view === "transfer"){
+    const amountEl = document.getElementById("tf-amount");
+    const recipientEl = document.getElementById("tf-recipient");
+    const noteEl = document.getElementById("tf-note");
+    const submitBtn = document.getElementById("tf-submit");
+
+    const updateBtn = ()=>{
+      const ok = amountEl.value.trim() !== "" && recipientEl.value.trim() !== "";
+      submitBtn.classList.toggle("enabled", ok);
+      submitBtn.classList.toggle("disabled", !ok);
+    };
+    amountEl.addEventListener("input", ()=>{
+      amountEl.value = amountEl.value.replace(/[^0-9.]/g,"");
+      updateBtn();
+    });
+    recipientEl.addEventListener("input", updateBtn);
+
+    document.querySelectorAll("[data-recipient]").forEach(el=>{
+      el.addEventListener("click", ()=>{
+        recipientEl.value = el.getAttribute("data-recipient");
+        updateBtn();
+      });
+    });
+
+    submitBtn.addEventListener("click", ()=>{
+      if(submitBtn.classList.contains("disabled")) return;
+      const amt = parseFloat(amountEl.value) || 0;
+      const name = recipientEl.value;
+      showToast(`${fmt(amt)} sent to ${name}`);
+      amountEl.value=""; recipientEl.value=""; noteEl.value="";
+      updateBtn();
+    });
+  }
+}
+
+function closeNotifOnOutsideClick(e){
+  if(!state.notifOpen) return;
+  const panel = document.getElementById("notif-panel");
+  const toggle = document.getElementById("notif-toggle");
+  if(panel && !panel.contains(e.target) && toggle && !toggle.contains(e.target)){
+    state.notifOpen = false;
+    render();
+  }
+}
+
+let toastTimer;
+function showToast(text){
+  const toast = document.getElementById("toast");
+  document.getElementById("toast-text").textContent = text;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> toast.classList.remove("show"), 3000);
+}
+
+render();
+</script>
+</body>
+</html>
